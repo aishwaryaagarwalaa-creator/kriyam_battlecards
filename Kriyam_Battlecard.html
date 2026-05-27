@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kriyam.ai — Competitive Battlecard</title>
+<style>
+:root {
+  --bg-primary:#080d17;
+  --bg-elevated:#0d1422;
+  --bg-surface:#111827;
+  --bg-hover:#1a2235;
+  --bg-card:#141c2e;
+  --text-primary:#f0f4ff;
+  --text-secondary:rgba(240,244,255,0.72);
+  --text-muted:rgba(240,244,255,0.45);
+  --border:rgba(255,255,255,0.08);
+  --border-hover:rgba(255,255,255,0.15);
+  --kriyam:#0e8a96;
+  --kriyam-light:#12b0c0;
+  --kriyam-bg:rgba(14,138,150,0.12);
+  --win:#10b981;
+  --win-bg:rgba(16,185,129,0.1);
+  --lose:#ef4444;
+  --lose-bg:rgba(239,68,68,0.1);
+  --tie:#f59e0b;
+  --tie-bg:rgba(245,158,11,0.1);
+  --signzy:#c2650a;
+  --perfios:#1e4a7a;
+  --auth:#5b1f96;
+  --authbridge:#5b1f96;
+  --status:#374151;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:'Inter',system-ui,sans-serif;min-height:100vh;line-height:1.6;}
+a{color:var(--kriyam-light);text-decoration:none;}
+
+/* HEADER */
+.site-header{background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-dot{width:32px;height:32px;background:var(--kriyam);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:white;}
+.logo-name{font-weight:700;font-size:1.1rem;letter-spacing:-0.02em;}
+.logo-sub{font-size:0.7rem;color:var(--text-muted);font-family:'SF Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
+.header-meta{font-size:0.68rem;color:var(--text-muted);font-family:monospace;text-align:right;line-height:1.8;}
+
+/* NAV TABS */
+.tab-nav{background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:0 32px;display:flex;gap:4px;overflow-x:auto;}
+.tab-btn{padding:14px 20px;font-size:0.8rem;font-weight:600;color:var(--text-muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.2s;letter-spacing:0.02em;}
+.tab-btn:hover{color:var(--text-primary);background:var(--bg-hover);}
+.tab-btn.active{color:var(--kriyam-light);border-bottom-color:var(--kriyam);}
+.tab-btn .comp-badge{display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:50%;margin-right:7px;}
+
+/* MAIN */
+.main{max-width:1400px;margin:0 auto;padding:32px;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* SECTION HEADERS */
+.section-hdr{margin-bottom:24px;}
+.section-hdr h2{font-size:1.4rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:6px;}
+.section-hdr p{font-size:0.82rem;color:var(--text-muted);}
+
+/* MATRIX */
+.matrix-grid{display:grid;grid-template-columns:240px repeat(4,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:36px;}
+.matrix-cell{background:var(--bg-card);padding:14px 16px;font-size:0.78rem;}
+.matrix-cell.header{background:var(--bg-surface);font-weight:700;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
+.matrix-cell.row-label{font-weight:600;color:var(--text-secondary);font-size:0.8rem;}
+.matrix-cell.kriyam-col{background:var(--kriyam-bg);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:0.68rem;font-weight:700;letter-spacing:0.04em;}
+.badge.win{background:var(--win-bg);color:var(--win);}
+.badge.lose{background:var(--lose-bg);color:var(--lose);}
+.badge.partial{background:var(--tie-bg);color:var(--tie);}
+.badge.na{background:rgba(255,255,255,0.05);color:var(--text-muted);}
+
+/* WIN/LOSS SUMMARY CARDS */
+.wl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:36px;}
+.wl-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color 0.2s;}
+.wl-card:hover{border-color:var(--border-hover);}
+.wl-card-name{font-weight:700;font-size:0.9rem;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.wl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.wl-section{margin-bottom:12px;}
+.wl-section-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:7px;}
+.wl-item{font-size:0.75rem;color:var(--text-secondary);display:flex;align-items:flex-start;gap:7px;margin-bottom:5px;line-height:1.45;}
+.wl-item::before{content:'';flex-shrink:0;width:5px;height:5px;border-radius:50%;margin-top:6px;}
+.you-win .wl-item::before{background:var(--win);}
+.they-win .wl-item::before{background:var(--lose);}
+
+/* COMPETITOR BATTLECARD */
+.bc-grid{display:grid;grid-template-columns:320px 1fr;gap:20px;margin-bottom:24px;}
+.bc-profile{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.bc-profile-name{font-size:1.3rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:4px;}
+.bc-profile-tagline{font-size:0.78rem;color:var(--text-muted);margin-bottom:20px;font-style:italic;}
+.bc-stat{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:0.78rem;}
+.bc-stat:last-child{border-bottom:none;}
+.bc-stat-label{color:var(--text-muted);}
+.bc-stat-value{font-weight:600;color:var(--text-primary);}
+.bc-right{display:flex;flex-direction:column;gap:16px;}
+.bc-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.bc-panel-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:14px;}
+.bc-panel-title.win{color:var(--win);}
+.bc-panel-title.lose{color:var(--lose);}
+.bc-panel-title.amber{color:var(--tie);}
+.bc-panel-title.teal{color:var(--kriyam-light);}
+
+/* RELEASE ITEMS */
+.release-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.release-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.release-date{font-family:monospace;font-size:0.65rem;color:var(--text-muted);white-space:nowrap;padding-top:2px;}
+.release-body{}
+.release-title{font-weight:600;font-size:0.8rem;margin-bottom:3px;}
+.release-impact{font-size:0.72rem;color:var(--text-secondary);}
+
+/* STRENGTH ITEMS */
+.strength-item{margin-bottom:10px;padding:10px 12px;border-radius:8px;font-size:0.78rem;line-height:1.5;}
+.strength-item.win{background:var(--win-bg);border-left:3px solid var(--win);}
+.strength-item.lose{background:var(--lose-bg);border-left:3px solid var(--lose);}
+.strength-item strong{display:block;font-weight:700;margin-bottom:2px;}
+
+/* TALK TRACKS */
+.track-item{margin-bottom:14px;padding:14px;background:var(--bg-surface);border-radius:8px;border:1px solid var(--border);}
+.track-scenario{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--tie);margin-bottom:8px;}
+.track-body{font-size:0.78rem;color:var(--text-secondary);line-height:1.6;}
+.track-key{color:var(--kriyam-light);font-weight:600;}
+
+/* OBJECTIONS */
+.obj-item{margin-bottom:14px;}
+.obj-q{font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;}
+.obj-q::before{content:'Q';background:var(--lose-bg);color:var(--lose);font-size:0.6rem;font-weight:800;padding:1px 6px;border-radius:4px;flex-shrink:0;margin-top:1px;}
+.obj-a{font-size:0.78rem;color:var(--text-secondary);display:flex;align-items:flex-start;gap:8px;line-height:1.6;}
+.obj-a::before{content:'A';background:var(--win-bg);color:var(--win);font-size:0.6rem;font-weight:800;padding:1px 6px;border-radius:4px;flex-shrink:0;margin-top:1px;}
+
+/* LANDMINES */
+.landmine-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px 12px;background:var(--bg-surface);border-radius:8px;font-size:0.78rem;color:var(--text-secondary);line-height:1.5;border:1px solid var(--border);}
+.landmine-item::before{content:'💣';flex-shrink:0;}
+
+/* KRIYAM PAGE */
+.kriyam-hero{background:linear-gradient(135deg,rgba(14,138,150,0.2) 0%,rgba(14,138,150,0.05) 100%);border:1px solid rgba(14,138,150,0.3);border-radius:14px;padding:28px;margin-bottom:24px;}
+.kriyam-hero h2{font-size:1.5rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px;}
+.kriyam-hero p{font-size:0.85rem;color:var(--text-secondary);max-width:700px;}
+.kriyam-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kstat{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;}
+.kstat-num{font-size:1.8rem;font-weight:800;color:var(--kriyam-light);letter-spacing:-0.04em;line-height:1;}
+.kstat-label{font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:5px;}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.two-col{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+
+/* ALERTS */
+.alert{padding:12px 16px;border-radius:8px;font-size:0.78rem;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;line-height:1.5;}
+.alert.warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#fde68a;}
+.alert.danger{background:var(--lose-bg);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;}
+.alert.info{background:var(--kriyam-bg);border:1px solid rgba(14,138,150,0.3);color:#a5f3fc;}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .bc-grid{grid-template-columns:1fr;}
+  .wl-grid{grid-template-columns:1fr;}
+  .matrix-grid{grid-template-columns:120px repeat(4,1fr);}
+  .kriyam-stats{grid-template-columns:repeat(2,1fr);}
+  .three-col,.two-col{grid-template-columns:1fr;}
+  .main{padding:16px;}
+}
+
+/* UTILS */
+.mt-sm{margin-top:10px;}
+.mt-md{margin-top:20px;}
+.tag{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:700;letter-spacing:0.04em;}
+.tag.direct{background:rgba(239,68,68,0.15);color:#fca5a5;}
+.tag.indirect{background:rgba(245,158,11,0.15);color:#fde68a;}
+.tag.global{background:rgba(255,255,255,0.08);color:var(--text-muted);}
+.tag.watch{background:rgba(14,138,150,0.15);color:#a5f3fc;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-dot">K</div>
+    <div>
+      <div class="logo-name">Kriyam.ai</div>
+      <div class="logo-sub">Competitive Battlecard</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    Generated: May 2026 · unwindGTM · Aishwarya<br>
+    Competitors: Perfios · AuthBridge · Signzy · Status Quo<br>
+    Sources: Web research + ERM Strategy + Fraud Research Reports
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('matrix')">📊 Comparison Matrix</button>
+  <button class="tab-btn" onclick="showTab('kriyam')"><span class="comp-badge" style="background:#0e8a96"></span>Kriyam.ai</button>
+  <button class="tab-btn" onclick="showTab('bureau')"><span class="comp-badge" style="background:#0d7377"></span>Bureau.id</button>
+  <button class="tab-btn" onclick="showTab('artivatic')"><span class="comp-badge" style="background:#b5451b"></span>Artivatic.AI</button>
+  <button class="tab-btn" onclick="showTab('sas')"><span class="comp-badge" style="background:#1a3a5c"></span>SAS Institute</button>
+  <button class="tab-btn" onclick="showTab('perfios')"><span class="comp-badge" style="background:#1e4a7a"></span>Perfios + Clari5</button>
+  <button class="tab-btn" onclick="showTab('authbridge')"><span class="comp-badge" style="background:#5b1f96"></span>AuthBridge</button>
+  <button class="tab-btn" onclick="showTab('signzy')"><span class="comp-badge" style="background:#c2650a"></span>Signzy</button>
+  <button class="tab-btn" onclick="showTab('statusquo')"><span class="comp-badge" style="background:#374151"></span>Status Quo</button>
+</nav>
+
+<main class="main">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MATRIX TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="matrix" class="tab-content active">
+  <div class="section-hdr">
+    <h2>Head-to-Head Comparison</h2>
+    <p>Green = Kriyam wins · Red = Competitor wins · Amber = Tie/Partial · Grey = Not applicable · Tabs also cover: Bureau.id · Artivatic.AI · SAS Institute</p>
+  </div>
+
+  <div class="matrix-grid">
+    <!-- Headers -->
+    <div class="matrix-cell header">Capability</div>
+    <div class="matrix-cell header kriyam-col" style="color:var(--kriyam-light)">Kriyam.ai</div>
+    <div class="matrix-cell header">Perfios + Clari5</div>
+    <div class="matrix-cell header">AuthBridge</div>
+    <div class="matrix-cell header">Signzy</div>
+
+    <!-- Row 1 -->
+    <div class="matrix-cell row-label">IRDAI FMF April 2026 Native Coverage</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ Full — all 9 clauses</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — no field or FMC</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+
+    <!-- Row 2 -->
+    <div class="matrix-cell row-label">RBI FRM July 2024 Coverage</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ SCBMF + EWS + FMR</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ Clari5 — EFM/EWS</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — AML only</span></div>
+
+    <!-- Row 3 -->
+    <div class="matrix-cell row-label">Field Investigation Module</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ AI — geo-tagged, offline</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge partial">⚠ Human agents — days TAT</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+
+    <!-- Row 4 -->
+    <div class="matrix-cell row-label">Document AI / IDP (Claims stage)</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ 95%+ — 62 fraud types</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ Acclaim (health claims)</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None — human review</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — onboarding KYC only</span></div>
+
+    <!-- Row 5 -->
+    <div class="matrix-cell row-label">FMC Board Governance Workflow</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ Built for IRDAI FMC mandate</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — no FMC workflow</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+
+    <!-- Row 6 -->
+    <div class="matrix-cell row-label">India BFSI Fraud Knowledge Graph</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ Proprietary — real FCU data</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — banking EFM only</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge partial">Partial — mule network only</span></div>
+
+    <!-- Row 7 -->
+    <div class="matrix-cell row-label">NHCX Ideathon 2026 Winner</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ National Winner</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ No</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ No</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ No</span></div>
+
+    <!-- Row 8 -->
+    <div class="matrix-cell row-label">On-Prem / Data Localisation</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ Native — data never leaves</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ Available</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ Cloud-first</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ Cloud-first</span></div>
+
+    <!-- Row 9 -->
+    <div class="matrix-cell row-label">Deployment Timeline</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ 8–12 weeks</span></div>
+    <div class="matrix-cell"><span class="badge lose">12–18 months (enterprise)</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ 1–2 weeks (manual)</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ 2–4 weeks (API)</span></div>
+
+    <!-- Row 10 -->
+    <div class="matrix-cell row-label">Pricing (India entry)</div>
+    <div class="matrix-cell kriyam-col"><span class="badge win">✓ ₹20–40L/year</span></div>
+    <div class="matrix-cell"><span class="badge lose">₹50L+ (enterprise only)</span></div>
+    <div class="matrix-cell"><span class="badge partial">₹200–800/case</span></div>
+    <div class="matrix-cell"><span class="badge partial">₹30L+/year</span></div>
+
+    <!-- Row 11 -->
+    <div class="matrix-cell row-label">AML / Transaction Monitoring</div>
+    <div class="matrix-cell kriyam-col"><span class="badge partial">⚠ Sentinel (prototype)</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ Clari5 — market-leading</span></div>
+    <div class="matrix-cell"><span class="badge lose">✗ None</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ MuleShield — 72% detection</span></div>
+
+    <!-- Row 12 -->
+    <div class="matrix-cell row-label">Live Paying Clients (India BFSI)</div>
+    <div class="matrix-cell kriyam-col"><span class="badge partial">4 confirmed clients</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ 1,000+ FIs globally</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ 3,000+ clients</span></div>
+    <div class="matrix-cell"><span class="badge win">✓ 240+ FIs India</span></div>
+  </div>
+
+  <!-- WIN/LOSS GUIDE -->
+  <div class="section-hdr">
+    <h2>Quick Win / Loss Guide</h2>
+    <p>When do we win? When do we lose? Be honest — credibility comes from knowing both.</p>
+  </div>
+
+  <div class="wl-grid">
+    <!-- Perfios -->
+    <div class="wl-card">
+      <div class="wl-card-name">
+        <div class="wl-dot" style="background:#1e4a7a"></div>
+        vs Perfios + Clari5
+        <span class="tag direct">Direct</span>
+      </div>
+      <div class="wl-section you-win">
+        <div class="wl-section-label" style="color:var(--win)">We win when…</div>
+        <div class="wl-item">Prospect needs IRDAI FMF compliance now — Perfios cannot deliver in 8 weeks</div>
+        <div class="wl-item">Prospect needs field investigation — Perfios has zero field product</div>
+        <div class="wl-item">Budget is ₹20–50L — below Perfios minimum deal size</div>
+        <div class="wl-item">Prospect is mid-tier private insurer (Perfios targets enterprise/bank-heavy)</div>
+      </div>
+      <div class="wl-section they-win">
+        <div class="wl-section-label" style="color:var(--lose)">They win when…</div>
+        <div class="wl-item">Prospect requires 10+ named BFSI client references before buying</div>
+        <div class="wl-item">Prospect is a top-5 bank with existing Perfios/Clari5 AML relationship</div>
+        <div class="wl-item">RFP requires full ERM suite (credit risk + AML + fraud) from one vendor</div>
+      </div>
+    </div>
+
+    <!-- AuthBridge -->
+    <div class="wl-card">
+      <div class="wl-card-name">
+        <div class="wl-dot" style="background:#5b1f96"></div>
+        vs AuthBridge
+        <span class="tag direct">Direct</span>
+      </div>
+      <div class="wl-section you-win">
+        <div class="wl-section-label" style="color:var(--win)">We win when…</div>
+        <div class="wl-item">Prospect cares about TAT — AI in hours vs AuthBridge human agents in days</div>
+        <div class="wl-item">Prospect needs IRDAI Clause 8 court-admissible evidence trail</div>
+        <div class="wl-item">Prospect needs document AI + field investigation in one platform</div>
+        <div class="wl-item">Fraud ROI calculation is done — one case prevented covers months of Kriyam</div>
+      </div>
+      <div class="wl-section they-win">
+        <div class="wl-section-label" style="color:var(--lose)">They win when…</div>
+        <div class="wl-item">Regulator mandates human-signed field reports specifically (legal basis)</div>
+        <div class="wl-item">Prospect needs 20,000+ PIN code coverage immediately (AuthBridge has this)</div>
+        <div class="wl-item">Procurement has AuthBridge on existing vendor whitelist</div>
+      </div>
+    </div>
+
+    <!-- Signzy -->
+    <div class="wl-card">
+      <div class="wl-card-name">
+        <div class="wl-dot" style="background:#c2650a"></div>
+        vs Signzy
+        <span class="tag indirect">Indirect</span>
+      </div>
+      <div class="wl-section you-win">
+        <div class="wl-section-label" style="color:var(--win)">We win when…</div>
+        <div class="wl-item">Prospect needs claims-stage fraud detection (Signzy is onboarding-only)</div>
+        <div class="wl-item">Prospect needs IRDAI FMF compliance — Signzy has zero FMF coverage</div>
+        <div class="wl-item">Prospect is Insurance FCU team (not a banking KYC team)</div>
+      </div>
+      <div class="wl-section they-win">
+        <div class="wl-section-label" style="color:var(--lose)">They win when…</div>
+        <div class="wl-item">Prospect needs KYC/AML at onboarding — this is not Kriyam's fight</div>
+        <div class="wl-item">Prospect needs CKYC 2.0 or MuleShield for mule account detection at onboarding</div>
+        <div class="wl-item">Prospect needs 340+ API marketplace across KYC/KYB/AML workflows</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- KRIYAM TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="kriyam" class="tab-content">
+  <div class="kriyam-hero">
+    <h2>Kriyam.ai — Our Story</h2>
+    <p>India's only AI-native platform covering field investigation + document AI + board-level FMC governance — purpose-built for the ₹45,000 Cr India BFSI fraud problem and the IRDAI April 2026 mandate. Built by GEOGO Techsolutions Pvt. Ltd., Bengaluru.</p>
+  </div>
+
+  <div class="kriyam-stats">
+    <div class="kstat"><div class="kstat-num">₹45K Cr</div><div class="kstat-label">India BFSI fraud/year (IRDAI + RBI data)</div></div>
+    <div class="kstat"><div class="kstat-num">8–12 wks</div><div class="kstat-label">Deployment vs 12–18 months for IBM/Perfios</div></div>
+    <div class="kstat"><div class="kstat-num">95%+</div><div class="kstat-label">DocWise accuracy on insurance claim documents</div></div>
+    <div class="kstat"><div class="kstat-num">Apr 2026</div><div class="kstat-label">IRDAI FMF mandate — every insurer needs FMC NOW</div></div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title teal">Our 3 Products</div>
+      <div class="strength-item win"><strong>DocWise — Document AI</strong>95%+ accuracy. 22 motor fraud types, 18 life fraud types, 22 health fraud types, NBFC income docs, vehicle loan docs. Research-backed. PM: Avishek.</div>
+      <div class="strength-item win"><strong>Field Service — Field Investigation</strong>Offline-capable, GPS-tagged, voice + vision AI. IRDAI Clause 8 compliant. Court-admissible digital evidence. PM: Shreyas.</div>
+      <div class="strength-item win"><strong>Sentinel — Pre-Fraud EWS</strong>Cross-insurer fraud graph, RFI Engine, FMC Dashboard, FMR reporting. PROTOTYPE — contact Suvajit. Do not promise delivery dates.</div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title win">Recent Releases / Credentials</div>
+      <div class="release-item">
+        <div class="release-date">Apr 2026</div>
+        <div class="release-body"><div class="release-title">NHCX Ideathon 2026 — National Winner</div><div class="release-impact">Strongest credential in health insurance segment. Opens NHA and every health insurer conversation as a warm introduction, not cold outreach.</div></div>
+      </div>
+      <div class="release-item">
+        <div class="release-date">Apr 2026</div>
+        <div class="release-body"><div class="release-title">Toyota Financial Services India — Live Client</div><div class="release-impact">First vehicle NBFC client. Reference for Hyundai Finance, VW FS, Tata Capital as immediate follow-on targets.</div></div>
+      </div>
+      <div class="release-item">
+        <div class="release-date">Mar 2026</div>
+        <div class="release-body"><div class="release-title">DocWise Vehicle NBFC Module</div><div class="release-impact">RC book OCR, OEM invoice verification, Vahan API integration. 15 vehicle fraud types now covered. Tailored for Toyota Financial workflow.</div></div>
+      </div>
+      <div class="release-item">
+        <div class="release-date">Ongoing</div>
+        <div class="release-body"><div class="release-title">Research Papers in Pipeline</div><div class="release-impact">DocWise is research-backed. Papers in pipeline — positions Kriyam as the only research-led fraud intelligence platform in India BFSI. Confirmed by Suvajit.</div></div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title teal">Master Positioning Statement</div>
+      <div style="font-size:0.95rem;font-weight:700;color:var(--kriyam-light);line-height:1.4;margin-bottom:14px;">"India's only AI-native integrated fraud intelligence platform — field investigation + document AI + board-level FMC governance — purpose-built for the IRDAI April 2026 mandate."</div>
+      <div class="divider"></div>
+      <div class="bc-panel-title teal mt-sm">Our Honest Weaknesses</div>
+      <div class="strength-item lose"><strong>Brand recognition near zero</strong>Outside 4 live clients, no inbound demand. Every conversation is outbound. Content + paid campaigns in Weeks 1–3 are critical.</div>
+      <div class="strength-item lose"><strong>Sentinel is prototype</strong>Do NOT lead with Sentinel unless prospect is specifically asking for EWS/AML. Lead with DocWise + Field Service.</div>
+      <div class="strength-item lose"><strong>4 live clients only</strong>Prospect reference checks are a risk. Close 2 named insurance brands by June 2026 — Horizon 1 priority per ERM Strategy.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PERFIOS TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="perfios" class="tab-content">
+  <div class="alert warn">⚠️ Most dangerous direct competitor. $443M raised, unicorn, 1,000+ FIs. Win on India-fit + IRDAI-native + field investigation + 8 weeks vs 18 months.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#4a8fcc">Perfios + Clari5</div>
+      <div class="bc-profile-tagline">Financial data platform that added claims. Clari5 acquisition adds EFM/AML.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag direct">Direct</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Funding</span><span class="bc-stat-value">$443M raised · Unicorn</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Employees</span><span class="bc-stat-value">~1,500</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">G2 Rating</span><span class="bc-stat-value">4.2★ · 7 reviews</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Entry Price</span><span class="bc-stat-value">₹50L+ per annum</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Deployment</span><span class="bc-stat-value">12–18 months</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Target</span><span class="bc-stat-value">Banks, large insurers, NBFC</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">India BFSI clients</span><span class="bc-stat-value">HDFC Life, Bajaj Allianz, Axis</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">Recent Releases (Last 90 days)</div>
+        <div class="release-item">
+          <div class="release-date">2024–2026</div>
+          <div class="release-body"><div class="release-title">Acclaim — Health Claims Automation + FWA Detection</div><div class="release-impact">Zurich Innovation Championship Winner (Indonesia). Integrates claims digitization + ML fraud/waste/abuse detection. ICD, LOINC, ATC medical encodings. Straight-through processing for health insurers. Their strongest insurance product — and it's health-only.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Active</div>
+          <div class="release-body"><div class="release-title">TrustArmour + Deepfake Detection</div><div class="release-impact">Document tamper + behavioural check + deepfake detection added to product suite. Expanding beyond bank statement analysis into fraud signals.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Active</div>
+          <div class="release-body"><div class="release-title">Data Intelligence Bridge (IDP)</div><div class="release-impact">Document understanding + fraud detection — their direct DocWise competitor. Covers Aadhaar, PAN, salary slips, GST. More generic than DocWise's insurance-specific fraud type coverage.</div></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>IRDAI FMF April 2026</strong>Perfios has no FMC governance workflow, no IIB submission pipeline. Kriyam covers all 9 FMF clauses natively.</div>
+          <div class="strength-item win"><strong>Field Investigation</strong>Perfios has zero field investigation product. IRDAI Clause 8 is Kriyam's exclusive territory.</div>
+          <div class="strength-item win"><strong>Speed + Price</strong>8 weeks vs 12–18 months. ₹20–40L vs ₹50L+. IRDAI mandate urgency = no time for 18-month deployment.</div>
+          <div class="strength-item win"><strong>Insurance-specificity</strong>Acclaim is health claims only. Kriyam covers motor + health + life + general + NBFC from one platform.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>Reference list</strong>1,000+ FIs. HDFC Life, Bajaj Allianz, Axis Bank. Hard to beat on reference credibility with large enterprise accounts.</div>
+          <div class="strength-item lose"><strong>AML / Banking EFM</strong>Clari5 is proven, live, and deployed in major banks. Kriyam's Sentinel is prototype — do NOT compete on AML.</div>
+          <div class="strength-item lose"><strong>Analyst recognition</strong>CB Insights Fintech 100 two years running. ISO 42001 AI certified. Enterprise procurement trusts these signals.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">Early Mention</div>
+        <div class="track-body">"Perfios is a great financial data platform — they built their insurance offering from the banking side. <span class="track-key">Kriyam was built from inside Insurance FCU teams from Day 1.</span> Ask them: what does their IRDAI Clause 8 field investigation workflow look like?"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Prospect Uses Perfios</div>
+        <div class="track-body">"Perfios Acclaim does health claims analytics — that's the post-claim layer. <span class="track-key">Kriyam is the field investigation and FMC governance layer IRDAI now mandates</span> — Clause 4 (FMC committee), Clause 8 (field standards). These are different systems, not competitors."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Evaluation Shortlist</div>
+        <div class="track-body">"Perfios takes 12–18 months to deploy and starts at ₹50L+. <span class="track-key">Kriyam deploys in 8 weeks at ₹20–40L — and you are already past the IRDAI April 2026 deadline.</span> Which deployment timeline satisfies your compliance mandate?"</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">Perfios has 1,000+ clients — how do we know Kriyam works?</div>
+        <div class="obj-a">Kotak Life, PNB MetLife, Edelweiss Life, Toyota Financial — 4 live, paying clients who trusted Kriyam to handle their fraud investigation operations. More importantly: <strong>none of Perfios's 1,000 clients have the IRDAI FMF Clause 8 field investigation capability. Kriyam does.</strong></div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">We already use Perfios for bank statement analysis.</div>
+        <div class="obj-a">Perfios reads bank statements. DocWise detects forged bank statements — pixel-level font analysis, metadata forensics, cross-document consistency. Different layers, complementary. Perfios analyses the data; Kriyam authenticates the document.</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">What does Perfios's IRDAI Clause 8 field investigation workflow look like in practice?</div>
+      <div class="landmine-item">When a surveyor submits a field report, how does Perfios verify that the investigator was physically present at the location?</div>
+      <div class="landmine-item">How long does a Perfios Acclaim implementation take, and what SI partner would you use?</div>
+      <div class="landmine-item">Does Perfios have an IRDAI FMC governance dashboard that auto-generates your quarterly FMR board report?</div>
+      <div class="landmine-item">Can Perfios map each of its features to each clause of the IRDAI FMF 2025 guidelines?</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- AUTHBRIDGE TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="authbridge" class="tab-content">
+  <div class="alert danger">🚨 Most direct threat to Field Service. GroundCheck.ai (June 2025) is their AI field verification play. Counter on: IRDAI Clause 8 court-admissible evidence + document AI layer + FMC governance they cannot provide.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#9b59b6">AuthBridge</div>
+      <div class="bc-profile-tagline">India's largest authentication company — pivoting from background checks to AI field verification.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag direct">Direct</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Revenue</span><span class="bc-stat-value">$50–100M est.</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Employees</span><span class="bc-stat-value">~500</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">G2 Rating</span><span class="bc-stat-value">4.1★ · 11 reviews</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Entry Price</span><span class="bc-stat-value">₹200–800 per case</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Coverage</span><span class="bc-stat-value">20,000+ PIN codes</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Clients</span><span class="bc-stat-value">3,000+ (incl. Airtel, ICICI, Swiggy)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">New Product</span><span class="bc-stat-value">GroundCheck.ai (Jun 2025)</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">Recent Releases (Last 90 days)</div>
+        <div class="release-item">
+          <div class="release-date">Jun 2025</div>
+          <div class="release-body"><div class="release-title">GroundCheck.ai — India's First AI-Powered CPV Platform</div><div class="release-impact">Contact Point Verification for customers, merchants, vendors. 3 deployment models: white-label app / hybrid AuthBridge field force / fully managed. 20,000+ PIN code coverage. Low-connectivity rural support. This is their direct Field Service competitor — launched and GA.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Apr 2025</div>
+          <div class="release-body"><div class="release-title">AI Platform Suite (GCC Summit 2025)</div><div class="release-impact">Largest AI-powered identity verification platform suite. Trained on 1.5 billion+ proprietary data records. ML, LLM, NLP, Facial Recognition. Processes 15M verifications/month across 140+ countries.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Dec 2025</div>
+          <div class="release-body"><div class="release-title">Insurance Agent Licence Verification via PAN</div><div class="release-impact">Direct BFSI-targeted product update. AuthBridge is actively targeting insurance agent verification — overlaps with Kriyam's Life FCU (1C) agent fraud use case.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Mar 2026</div>
+          <div class="release-body"><div class="release-title">TruthScreen Upgrades — Fraud + Forgery Detection</div><div class="release-impact">Smarter address intelligence, fraud + forgery detection, identity verification improvements. Expanding from background checks into document fraud — moving toward DocWise territory.</div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>Document AI + Field in one</strong>AuthBridge verifies. Kriyam investigates — document AI + field evidence + fraud graph combined. AuthBridge cannot offer this combination.</div>
+          <div class="strength-item win"><strong>IRDAI Clause 8 compliance</strong>GroundCheck.ai is CPV for onboarding. Kriyam Field Service is fraud investigation with court-admissible evidence chain — what IRDAI Clause 8 specifically requires.</div>
+          <div class="strength-item win"><strong>IRDAI FMC governance</strong>AuthBridge has no FMC workflow, no FMR board report, no IIB submission pipeline. Kriyam covers the full compliance layer.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>Scale of field network</strong>20,000+ PIN codes. 3,000+ clients. AuthBridge's field human network is significantly larger than Kriyam's current coverage.</div>
+          <div class="strength-item lose"><strong>Brand incumbency</strong>Already on procurement-approved vendor lists at many insurers for background verification. Switching cost is real.</div>
+          <div class="strength-item lose"><strong>Background verification depth</strong>HR + finance + insurance + BFSI background checks. 250+ APIs. Broader than Kriyam's scope.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">When GroundCheck.ai Comes Up</div>
+        <div class="track-body">"GroundCheck.ai is Contact Point Verification — it confirms the person exists at that address. <span class="track-key">IRDAI Clause 8 requires fraud investigation evidence: geo-tagged photos, chain of custody, court-admissible records, and supervisor sign-off.</span> Those are two completely different products."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Displacement (AuthBridge Incumbent)</div>
+        <div class="track-body">"AuthBridge sends a human agent in 1–2 days. <span class="track-key">Kriyam Field Service sends AI in hours — at 30–40% lower cost per case, with an immutable digital evidence trail.</span> When was the last time AuthBridge's field report was used in a fraud prosecution?"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Hybrid Positioning</div>
+        <div class="track-body">"Kriyam as the intelligence layer on top of AuthBridge's field network — <span class="track-key">AuthBridge does the physical reach, Kriyam provides the document AI verification and FMC governance compliance</span> AuthBridge cannot do."</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">We already use AuthBridge for field investigations — they cover 20,000 PIN codes.</div>
+        <div class="obj-a">Geographic coverage and fraud investigation capability are different things. AuthBridge covers more PIN codes. Kriyam produces IRDAI Clause 8-compliant, court-admissible investigation reports with document AI embedded in the evidence chain. Has an AuthBridge field report ever been submitted to a court as evidence?</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">AuthBridge's new GroundCheck.ai does AI field verification.</div>
+        <div class="obj-a">GroundCheck.ai is Contact Point Verification — it confirms address and merchant details for onboarding. Kriyam Field Service is fraud investigation — geo-tagged evidence, supervisor sign-off, chain of custody, FMC reporting. Same category name, completely different product.</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">When a GroundCheck.ai field report is completed, in what format is the evidence submitted to your IRDAI FMC committee?</div>
+      <div class="landmine-item">Has AuthBridge's field investigation report ever been used as court-admissible fraud evidence? How is the chain of custody maintained?</div>
+      <div class="landmine-item">What does AuthBridge's IRDAI FMF Clause 4 (FMC governance) implementation look like?</div>
+      <div class="landmine-item">If a surveyor submits a fraudulent field report, how does GroundCheck.ai detect it?</div>
+      <div class="landmine-item">What's the document AI layer in GroundCheck.ai — how does it verify the documents presented during the field visit?</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SIGNZY TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="signzy" class="tab-content">
+  <div class="alert info">ℹ️ Indirect competitor — onboarding/KYC stage only. Do NOT compete on KYC automation. Our fight is at the claims and field investigation stage. Signzy is the door; Kriyam is the building.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#e8843a">Signzy</div>
+      <div class="bc-profile-tagline">Digital banking infrastructure — KYC, KYB, AML, and onboarding workflows for BFSI.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag indirect">Indirect</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Funding</span><span class="bc-stat-value">Series B est.</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">APIs</span><span class="bc-stat-value">340+ ready APIs</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">G2 Rating</span><span class="bc-stat-value">4.3★ · 18 reviews</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">FIs served</span><span class="bc-stat-value">240+ India · 500+ global</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Key clients</span><span class="bc-stat-value">4 largest banks India · Mastercard · Microsoft</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Patents</span><span class="bc-stat-value">8 US + 9 India patents</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Geography</span><span class="bc-stat-value">India + US + Kenya + global expansion</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">Recent Releases (Last 90 days)</div>
+        <div class="release-item">
+          <div class="release-date">May 2026</div>
+          <div class="release-body"><div class="release-title">Agentic CKYC Platform — CKYC 2.0 / CKYCRR</div><div class="release-impact">Auto-fix CERSAI data errors, normalize images, mask Aadhaar in real-time. First-time-right CKYC 2.0 JSON schema conversion. 50+ banks trust Signzy for CKYC compliance. This is their biggest current push — and it's onboarding KYC, not fraud investigation.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">2024</div>
+          <div class="release-body"><div class="release-title">MuleShield — Mule Account Detection</div><div class="release-impact">AI Trust Score from 200+ parameters. Detected 400,000+ mule accounts. Enhanced mule detection by 72%, prevented $12M potential loss in 8 months. Behavioral biometrics + transaction velocity + network analysis. This is their EWS play — competes with Sentinel conceptually, not with Field Service or DocWise.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Active</div>
+          <div class="release-body"><div class="release-title">International Expansion (Kenya CBK, US, EU)</div><div class="release-impact">CBK compliance ads visible in LinkedIn Ad Library. Running active campaigns for Kenya digital lending market. Signzy is building international revenue — their India BFSI growth may slow as they spread resources.</div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>Claims-stage fraud</strong>Signzy is KYC at onboarding. The fraud Kriyam catches — altered repair bills, forged death certificates, inflated medical bills — happens post-onboarding. Different lifecycle stage entirely.</div>
+          <div class="strength-item win"><strong>IRDAI FMF coverage</strong>Signzy has zero IRDAI FMF coverage. No FMC governance, no field investigation, no IIB reporting. Kriyam covers all 9 clauses.</div>
+          <div class="strength-item win"><strong>Field investigation</strong>Signzy has no field product. IRDAI Clause 8 is exclusively Kriyam's territory.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>KYC/onboarding workflows</strong>Do NOT compete on this. 340+ APIs, no-code builder, bank-pre-approved status. Signzy wins every KYC evaluation.</div>
+          <div class="strength-item lose"><strong>AML / mule detection</strong>MuleShield has real data (400K+ mule accounts, $12M fraud prevented). Until Sentinel ships, do not pitch against MuleShield.</div>
+          <div class="strength-item lose"><strong>Global/bank-grade credibility</strong>Mastercard + Microsoft partnerships. 4 largest banks in India. For banking prospects, Signzy's institutional credibility is significant.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">Early Mention (Signzy in shortlist)</div>
+        <div class="track-body">"Signzy is an excellent KYC and onboarding platform — and it's not in competition with Kriyam. <span class="track-key">Signzy secures your customer entry door at onboarding. Kriyam secures your fraud lifecycle — before the claim (Sentinel), during the claim (DocWise), and in the field (Field Service).</span> They solve different problems."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Prospect Confused About Categories</div>
+        <div class="track-body">"Let me clarify: KYC automation and fraud investigation are two different categories. <span class="track-key">Signzy is RegTech for onboarding. Kriyam is Fraud Risk Management for claims and investigation — the category IRDAI's April 2026 mandate specifically requires.</span>"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">MuleShield vs Sentinel</div>
+        <div class="track-body">"MuleShield detects mule accounts at onboarding — which is valuable. <span class="track-key">Kriyam's Sentinel detects collusive fraud rings across the insurer network post-issuance.</span> Different stage, different fraud type. [Note: Do not pitch Sentinel until it ships — use this only if prospect specifically asks about network fraud EWS.]"</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">We already use Signzy for KYC — we're covered on fraud.</div>
+        <div class="obj-a">Signzy covers identity fraud at onboarding. The fraud Kriyam detects happens after the policy is issued — altered repair bills, fake discharge summaries, forged FIRs, fraudulent field inspection reports. Signzy cannot detect any of these. IRDAI's April 2026 mandate specifically addresses this post-onboarding fraud layer.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">Signzy has MuleShield for fraud detection.</div>
+        <div class="obj-a">MuleShield detects mule accounts at onboarding using behavioral signals. It has no document AI, no field investigation, and no FMC governance capability. It's an account-risk tool, not an insurance fraud investigation platform.</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">When an insurance surveyor submits a fraudulent field inspection report, what does Signzy do to detect it?</div>
+      <div class="landmine-item">How does Signzy handle IRDAI FMF Clause 8 — field investigation standards for insurance FCU teams?</div>
+      <div class="landmine-item">What does Signzy's FMC governance dashboard look like — the board-level FMC mandated by IRDAI Clause 4?</div>
+      <div class="landmine-item">If a hospital submits an inflated discharge summary to a health TPA, how does Signzy detect the document tampering?</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- STATUS QUO TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="statusquo" class="tab-content">
+  <div class="alert danger">⚠️ The real competitor. 60%+ of mid-tier Indian insurers still run fraud workflows on Excel, WhatsApp, and email. This is easier to displace than any named vendor — the pain is quantifiable and the IRDAI mandate makes doing nothing illegal.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#9ca3af">Status Quo</div>
+      <div class="bc-profile-tagline">Excel + WhatsApp + Email + Paper Forms. Free tools. 60%+ of mid-tier Indian insurers.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag watch">Biggest Competitor</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Cost</span><span class="bc-stat-value">Near-zero opex (free tools)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Deployment</span><span class="bc-stat-value">Immediate — already in use</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Switching cost</span><span class="bc-stat-value">Process change — the real barrier</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">IRDAI FMF compliance</span><span class="bc-stat-value" style="color:var(--lose)">FAILS — legally insufficient from Apr 2026</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Real cost</span><span class="bc-stat-value">₹5 Cr+ fraud leakage on ₹500 Cr book</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title win">Why Status Quo ALWAYS Loses to Kriyam (Post April 2026)</div>
+        <div class="strength-item win"><strong>IRDAI FMF Clause 4 — Board FMC mandate</strong>Every insurer must have a board-approved Fraud Monitoring Committee with a nominated Nodal Officer and quarterly board reporting. Excel cannot produce a board-approved FMR. This is a legal mandate, not a suggestion.</div>
+        <div class="strength-item win"><strong>IRDAI FMF Clause 6 — RFI System</strong>Quantitative + qualitative Red Flag Indicators required at both underwriting AND claims stage. WhatsApp flags are not an RFI system. The mandate requires a documented, auditable system.</div>
+        <div class="strength-item win"><strong>IRDAI FMF Clause 7 — IIB Reporting</strong>Confirmed fraud cases must be reported to Insurance Information Bureau within 7 days in mandated format. Excel cannot auto-generate IIB submissions. Manual process cannot meet the 7-day deadline at scale.</div>
+        <div class="strength-item win"><strong>IRDAI FMF Clause 8 — Field Investigation</strong>Structured investigation workflows with documented evidence, chain of custody, mandatory photo/video, court-admissible. WhatsApp photo sends do not constitute court-admissible evidence.</div>
+      </div>
+      <div class="bc-panel">
+        <div class="bc-panel-title">The ROI Calculation (Make This Concrete)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:var(--lose-bg);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:14px;">
+            <div style="font-size:0.65rem;font-weight:700;color:var(--lose);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Cost of Status Quo</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6;">1% fraud on ₹500 Cr claims book = <strong style="color:var(--lose)">₹5 Cr in fraud loss/year</strong><br><br>IRDAI non-compliance fine potential<br><br>Reinsurer treaty at risk<br><br>Board personal liability for FMC failure</div>
+          </div>
+          <div style="background:var(--win-bg);border:1px solid rgba(16,185,129,0.2);border-radius:8px;padding:14px;">
+            <div style="font-size:0.65rem;font-weight:700;color:var(--win);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Cost of Kriyam</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.6;"><strong style="color:var(--win)">₹20–40L/year</strong><br><br>8–12 week deployment<br><br>Full IRDAI FMF compliance<br><br>One prevented fraud pays for 12 months</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">Opening Hook (Cold Outreach)</div>
+        <div class="track-body">"India's BFSI sector loses ₹45,000 Crore to fraud every year. <span class="track-key">The IRDAI Insurance Fraud Monitoring Framework goes live April 1, 2026. Every insurer must have a board-approved FMC, a documented RFI system, and court-admissible field investigation records. Excel and WhatsApp cannot satisfy any of these three requirements.</span> I have one question: when your board asks for the FMC quarterly report, what do you show them?"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">CRO Says 'We'll Handle It Manually'</div>
+        <div class="track-body">"Manual fraud review is not an option IRDAI is offering any longer. <span class="track-key">Clause 4 requires a board-level FMC with a KMP as Nodal Officer. Clause 7 requires IIB submission within 7 days. Clause 8 requires court-admissible investigation evidence.</span> These are compliance mandates, not best practices. The only question is: do you implement before April 1, or after your first IRDAI inspection?"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">CFO Objects on Cost</div>
+        <div class="track-body">"₹20–40L/year is less than one FCU manager's annual cost. <span class="track-key">One prevented fraudulent claim at the average value pays for a month of Kriyam.</span> And if the IRDAI inspector asks your CFO in an audit why your fraud monitoring framework is a WhatsApp group — that conversation is more expensive than Kriyam."</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">We've managed fraud manually for 20 years — we know what works.</div>
+        <div class="obj-a">Your manual process predates the IRDAI FMF 2025 guidelines. The framework effective April 1, 2026 is a structural change — not a tightening of existing rules but an entirely new governance architecture. What worked for 20 years does not satisfy Clause 4 (FMC mandate) or Clause 7 (IIB 7-day reporting). The question is not whether manual worked before — it's whether it satisfies the new mandate.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">Budget for a new system isn't approved yet.</div>
+        <div class="obj-a">The IRDAI FMF creates a new budget category: compliance infrastructure. Frame this as a compliance cost, not software cost. ₹20–40L is less than one FCU manager's fully-loaded annual cost. And the board FMC governance mandate means this budget will be approved — the question is whether it's approved before or after an inspection finding.</div>
+      </div>
+    </div>
+
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions for Status Quo</div>
+      <div class="landmine-item">When IRDAI asks to see your Fraud Monitoring Committee governance records from the last quarter, what format are they in today?</div>
+      <div class="landmine-item">How do you currently submit confirmed fraud cases to IIB within 7 days in the mandated format — can you show me that process?</div>
+      <div class="landmine-item">If a surveyor submits a fraudulent field report today, how long does it take your team to detect it, and what evidence trail exists?</div>
+      <div class="landmine-item">What does your current IRDAI FMF Clause 8 compliant field investigation process look like in writing?</div>
+      <div class="landmine-item">Has your board approved a formal Anti-Fraud Policy as required by IRDAI Clause 5? When was it last reviewed?</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- BUREAU.ID TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="bureau" class="tab-content">
+  <div class="alert info">ℹ️ WATCH competitor — not yet a direct threat. Bureau.id owns device intelligence + network fraud at onboarding. Kriyam owns fraud lifecycle post-issuance. Territory is clear for now. Monitor closely — if they add document AI or IRDAI FMF coverage, escalate.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#1abab8">Bureau.id</div>
+      <div class="bc-profile-tagline">AI-powered unified risk decisioning — device, identity, behavioral, and network signals for real-time fraud prevention.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag watch">Watch — Indirect</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">HQ</span><span class="bc-stat-value">Bengaluru, India (US + India)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Funding</span><span class="bc-stat-value">Series B — well-funded</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Clients</span><span class="bc-stat-value">200+ global brands — fintech, banking, e-commerce</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Core product</span><span class="bc-stat-value">Device intelligence + network fraud + identity signals</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Coverage</span><span class="bc-stat-value">Real-time onboarding, authentication, payments fraud</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">IRDAI FMF</span><span class="bc-stat-value" style="color:var(--lose)">None — no FMC, field, or claims coverage</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Category</span><span class="bc-stat-value">Risk Decisioning Platform — not Insurance FCU software</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">What Bureau.id Actually Does</div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">Unified Risk Decisioning — Device + Identity + Behavioral + Network</div><div class="release-impact">Combines device fingerprinting, IP/geolocation signals, behavioral biometrics, and identity graph into a single real-time fraud decision. Covers onboarding, authentication, and payments fraud. Self-learning system that decides in milliseconds. Trusted by fintechs and digital lenders — not insurance FCU teams.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">Mule Score — Network Fraud Detection</div><div class="release-impact">Detects money mule accounts using transaction velocity, relationship mapping, and behavioral analysis. Most conceptually similar to Kriyam's Sentinel — but at the onboarding/transaction layer, not the insurance claims or field investigation layer.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">KYC + Credit Underwriting + Compliance APIs</div><div class="release-impact">195+ market compliance coverage. KYC, KYB, AML. Alternate data for thin-file credit underwriting. Primarily serving BNPL, digital lending, and fintech — the 3E sub-ICP in Kriyam's map. This is where Bureau.id and Kriyam's paths come closest to crossing.</div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>Insurance FCU + IRDAI FMF</strong>Bureau.id has zero insurance fraud investigation capability, zero FMC governance, zero IIB reporting. Kriyam covers all 9 IRDAI FMF clauses. Bureau.id does not appear in a single insurance FCU RFP.</div>
+          <div class="strength-item win"><strong>Document AI (Claims stage)</strong>Bureau.id has no document AI for insurance claims — no discharge summary fraud detection, no motor bill verification, no death certificate authenticity check. DocWise is exclusive territory.</div>
+          <div class="strength-item win"><strong>Field Investigation</strong>Bureau.id has no field product whatsoever. IRDAI Clause 8 is entirely Kriyam's.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>Device intelligence</strong>Bureau.id's core moat. Device fingerprinting, IP signals, geolocation fraud detection at onboarding scale. Kriyam has no device layer — do not compete here.</div>
+          <div class="strength-item lose"><strong>Real-time payments fraud</strong>Transaction-level fraud monitoring in milliseconds. Kriyam is not a payments fraud platform.</div>
+          <div class="strength-item lose"><strong>Digital lender + BNPL</strong>For 3E BNPL sub-ICP, Bureau.id will appear in shortlists. Their real-time API latency and device signals are strong for this use case.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">Bureau.id on Shortlist (BNPL / Digital Credit)</div>
+        <div class="track-body">"Bureau.id knows the device and the transaction. <span class="track-key">Kriyam knows the fraud network — the cross-insurer collusion rings, the agent ghost policy batches, the document forgery patterns that device signals cannot detect.</span> They are complementary for digital lenders. Bureau.id at onboarding; Kriyam at origination document verification and fraud case management."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Insurance FCU Mention</div>
+        <div class="track-body">"Bureau.id is a digital lending and fintech fraud tool — it doesn't have an insurance FCU product, no IRDAI FMF mapping, and no field investigation capability. <span class="track-key">It's not in the same market as Kriyam for insurance fraud compliance.</span>"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Sentinel vs Bureau.id (BNPL prospect)</div>
+        <div class="track-body">"Bureau.id has strong device intelligence — that's their moat. <span class="track-key">Kriyam's Sentinel adds the network fraud graph layer — collusive rings, shared entity patterns across the insurer and NBFC network.</span> [Note: Sentinel is prototype — use this track only when Sentinel ships.]"</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">We already use Bureau.id for fraud detection.</div>
+        <div class="obj-a">Bureau.id handles device and transaction-level fraud at onboarding. Kriyam handles insurance claim document fraud, field investigation, and IRDAI FMC governance — lifecycle stages Bureau.id does not cover. They're complementary for insurance companies that need both layers.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">Bureau.id's Mule Score covers network fraud — why do we need Sentinel?</div>
+        <div class="obj-a">Bureau.id's Mule Score detects mule accounts at banking onboarding using transaction signals. Kriyam's Sentinel (when shipped) detects collusive fraud rings across the insurance claims network — ghost policies, cross-insurer staged accidents, agent fraud batches. Different fraud types, different data signals, different stage of the customer lifecycle.</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">How does Bureau.id handle IRDAI Clause 8 — the field investigation standard for insurance FCU teams?</div>
+      <div class="landmine-item">When a motor insurance surveyor submits a fraudulent field report, what does Bureau.id's platform detect?</div>
+      <div class="landmine-item">Does Bureau.id have an IRDAI FMC governance dashboard that auto-generates your quarterly FMR board report?</div>
+      <div class="landmine-item">How does Bureau.id detect a forged discharge summary submitted to a health TPA for cashless pre-auth?</div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- ARTIVATIC.AI TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="artivatic" class="tab-content">
+  <div class="alert warn">⚠️ Direct competitor — most similar product overlap in insurance AI. Part of RenewBuy group since 2022. Small ($1.43M total funding, ~134 employees, ₹6.26 Cr revenue FY25). Differentiate on: field investigation (IRDAI Clause 8), NHCX win, FMC governance, and research-backed DocWise accuracy. Merger with Girnar Group companies (InsuranceDekho) approved by CCI Nov 2025 — watch for expansion.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#e8703a">Artivatic.AI</div>
+      <div class="bc-profile-tagline">Full-stack insurance AI platform — underwriting, claims, fraud detection, and customer engagement. Part of RenewBuy Group.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag direct">Direct</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Ownership</span><span class="bc-stat-value">Acquired by RenewBuy (Feb 2022). Girnar/InsuranceDekho merger approved Nov 2025.</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Total funding</span><span class="bc-stat-value">$1.43M (Seed stage — very early)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Employees</span><span class="bc-stat-value">~134 (declined 2% YoY as of Jan 2025)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Revenue</span><span class="bc-stat-value">₹6.26 Cr FY25 — small commercial footprint</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">G2 presence</span><span class="bc-stat-value">Less than 5 reviews — limited external validation</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Key client</span><span class="bc-stat-value">Canara HSBC Life Insurance (Oct 2023)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">APIs</span><span class="bc-stat-value">700+ Insurance/HealthTech APIs (No-Code AI)</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">What Artivatic Sells — Product by Product</div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">AUSIS — AI Smart Underwriting (Life, Health, SME, Alternative)</div><div class="release-impact">AI-powered underwriting engine. Claims to deliver 90% reduction in TAT, 80% better fraud identification, 70% cost reduction. Dynamic underwriting + risk scoring at policy origination. Competes with Kriyam's DocWise at the origination stage only.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">ALFRED HEALTH — AI Health Claims Automation</div><div class="release-impact">Auto-adjudication, risk connected with hospitals, TPAs, and patients. FWA Intelligence Platform: behavioral analytics, claims history, provider profiling, billing pattern analysis, duplicate claim detection, provider abuse scoring. Their most direct overlap with Kriyam's DocWise health TPA use case.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">FWA Intelligence Platform</div><div class="release-impact">Fraud, Waste & Abuse detection via graph analytics, behavioral analytics, real-time fraud scoring before payment. Conceptually competes with Kriyam's Sentinel — but no confirmed IRDAI FMF compliance, no FMC governance workflow, no IIB submission.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Nov 2025</div>
+          <div class="release-body"><div class="release-title">CCI Approves Girnar Group Merger (InsuranceDekho)</div><div class="release-impact">Artivatic is now connected to InsuranceDekho's distribution network. This gives them more insurance industry access — but does not add field investigation or IRDAI FMF compliance capability.</div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>Field Investigation (IRDAI Clause 8)</strong>Artivatic is pure software — no field investigation product, no GPS-tagged field app, no court-admissible evidence chain. IRDAI Clause 8 is exclusively Kriyam territory. This is the single most powerful differentiator.</div>
+          <div class="strength-item win"><strong>IRDAI FMC Governance</strong>Artivatic has FWA analytics but no FMC committee workflow, no quarterly FMR board report generation, no IIB submission pipeline. Kriyam covers Clauses 4, 6, 7, 8, 9.</div>
+          <div class="strength-item win"><strong>NHCX National Winner 2026</strong>Artivatic has no NHCX credential. Kriyam won the government-run Ideathon — opens every NHA and health insurer conversation that Artivatic cannot access this way.</div>
+          <div class="strength-item win"><strong>Resource asymmetry in our favor</strong>Artivatic has $1.43M total funding and ₹6.26 Cr revenue. Kriyam has 4 live enterprise clients paying ₹20–40L/year each. We have more commercial validation at similar scale.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>Underwriting AI depth</strong>AUSIS covers Life, Health, SME, alternative underwriting with 700+ APIs. Kriyam does not compete in underwriting — different buyer (actuary/underwriter vs FCU).</div>
+          <div class="strength-item lose"><strong>Full insurance lifecycle platform</strong>Sales, onboarding, underwriting, claims, servicing, product design — Artivatic is end-to-end. Kriyam is fraud investigation only. Large RFPs asking for a single insurance platform vendor may prefer Artivatic.</div>
+          <div class="strength-item lose"><strong>RenewBuy / InsuranceDekho distribution</strong>Access to thousands of insurance agents and some insurer relationships via the parent group. Kriyam does not have this channel.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks</div>
+      <div class="track-item">
+        <div class="track-scenario">Early Mention / Shortlist</div>
+        <div class="track-body">"Artivatic is a full insurance platform — underwriting, sales, claims, all in one. Kriyam is purpose-built for fraud investigation and IRDAI FMF compliance. One question: <span class="track-key">what does Artivatic's IRDAI Clause 8 field investigation workflow look like? And how does it generate the court-admissible evidence trail required by the mandate?</span>"</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Prospect Has Artivatic Contract</div>
+        <div class="track-body">"Artivatic handles your claims analytics and underwriting AI — that's valuable. <span class="track-key">Kriyam is the IRDAI FMF compliance layer: FMC governance (Clause 4), RFI system (Clause 6), IIB submission (Clause 7), field investigation standards (Clause 8).</span> These are board-level mandates that Artivatic's platform doesn't cover. Kriyam complements what you already have."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Health TPA Competition</div>
+        <div class="track-body">"Artivatic's ALFRED HEALTH does claims analytics. <span class="track-key">Kriyam won the NHCX Ideathon 2026 — the government-run competition specifically for health insurance fraud detection on the National Health Claims Exchange.</span> That's validation Artivatic cannot match for this specific mandate."</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">Artivatic claims 80% better fraud identification — better than Kriyam?</div>
+        <div class="obj-a">Artivatic's 80% improvement claim is relative to their baseline, unpublished, and covers underwriting fraud scoring — not insurance claims document fraud or field investigation fraud. DocWise's 95%+ accuracy is specific to claims document extraction and tamper detection — independently validated on real India BFSI fraud cases. Ask Artivatic for their methodology.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">Artivatic is a full platform — we'd rather have one vendor.</div>
+        <div class="obj-a">Full platforms create full dependencies. Kriyam is the IRDAI FMF compliance layer — the only platform that covers Clauses 4, 6, 7, 8, and 9 natively. Artivatic cannot replace this compliance requirement, regardless of their platform breadth.</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">What does Artivatic's IRDAI Clause 8 field investigation workflow produce — and is that output court-admissible as fraud evidence?</div>
+      <div class="landmine-item">How does Artivatic generate the quarterly FMR board report for your IRDAI Fraud Monitoring Committee (Clause 4)?</div>
+      <div class="landmine-item">Does Artivatic have an IIB submission pipeline that auto-files fraud cases within the 7-day IRDAI mandate (Clause 7)?</div>
+      <div class="landmine-item">What is Artivatic's NHCX credential for health insurer fraud detection — and how does it compare to Kriyam's National Winner status?</div>
+      <div class="landmine-item">Given Artivatic's $1.43M total funding, how do they guarantee long-term platform support and SLA delivery for enterprise insurance clients?</div>
+    </div>
+  </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SAS INSTITUTE TAB -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="sas" class="tab-content">
+  <div class="alert info">ℹ️ Global GRC / Analytics platform — NOT a direct competitor. Appears in large insurer and bank RFPs alongside IBM and Oracle. Key message: SAS models the risk. Kriyam manages the investigation, the document, and the FMC board report. They are complementary. Win on: India-fit + IRDAI-native + 8 weeks vs 18 months + ₹20–40L vs ₹75L–3Cr.</div>
+
+  <div class="bc-grid">
+    <div class="bc-profile">
+      <div class="bc-profile-name" style="color:#5b9bd5">SAS Institute</div>
+      <div class="bc-profile-tagline">$3.7B global analytics platform. Insurance fraud decisioning, AML, credit risk, actuarial. Deployed via SI partners (Wipro, Infosys, TCS) in India.</div>
+      <div class="bc-stat"><span class="bc-stat-label">Tier</span><span class="bc-stat-value"><span class="tag global">Global GRC / Analytics</span></span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Revenue</span><span class="bc-stat-value">$3.7B annually (private company)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Employees</span><span class="bc-stat-value">~14,000 globally · 1,000+ India</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">India office</span><span class="bc-stat-value">Bengaluru (primary) · Mumbai · Delhi</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">G2 rating</span><span class="bc-stat-value">~50 reviews · 4.2★</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">India pricing (est.)</span><span class="bc-stat-value">₹75L–3Cr/year (licence only). Add ₹50L–2Cr SI services.</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">Deployment</span><span class="bc-stat-value">12–18 months · Always SI-led (Wipro / Infosys / TCS)</span></div>
+      <div class="bc-stat"><span class="bc-stat-label">India BFSI clients</span><span class="bc-stat-value">SBI, HDFC Bank, Axis Bank, LIC, New India Assurance</span></div>
+    </div>
+
+    <div class="bc-right">
+      <div class="bc-panel">
+        <div class="bc-panel-title">SAS's India Insurance Fraud Products</div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">SAS Fraud Decisioning for Claims</div><div class="release-impact">Sophisticated fraud scoring engine from FNOL to approval/denial. Insurance-specific claims fraud data model. 360-degree policyholder view across all lines. Social network analysis for fraud rings. Scales to millions of records. Celent Insurance Fraud Detection Leader 2022. Strong analytics — but no field investigation, no FMC governance, no IRDAI-native workflow.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">SAS Fraud Management (AML + Payments)</div><div class="release-impact">Industry-leading AML for banks. Used by SBI, HDFC Bank, Axis for transaction monitoring. Best-in-class in this category. Kriyam does NOT compete here — do not position Sentinel against SAS AML.</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Core</div>
+          <div class="release-body"><div class="release-title">SAS Insurance Analytics (Actuarial + Pricing)</div><div class="release-impact">Actuarial modelling, IFRS 17, credit scoring, pricing, reserving. Used by LIC, New India Assurance. Entirely outside Kriyam's scope — different buyer (actuary, finance) vs Kriyam's buyer (CRO, FCU Head).</div></div>
+        </div>
+        <div class="release-item">
+          <div class="release-date">Active</div>
+          <div class="release-body"><div class="release-title">Insurance Application Fraud Detection</div><div class="release-impact">Agent gaming detection via peer grouping, anomaly detection, and social network analysis. Detects agent fraud rings using behavioral patterns. Conceptually overlaps with Kriyam's agent fraud module — but requires 12–18 month deployment vs Kriyam's 8 weeks.</div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="bc-panel">
+          <div class="bc-panel-title win">Where Kriyam Wins</div>
+          <div class="strength-item win"><strong>IRDAI FMF Native — All 9 Clauses</strong>SAS Fraud Decisioning is configurable but not IRDAI-native. No FMC governance workflow, no IIB submission pipeline, no Clause 8 field investigation. Requires extensive SI customisation to approximate IRDAI FMF compliance.</div>
+          <div class="strength-item win"><strong>Field Investigation</strong>SAS has no field product. IRDAI Clause 8 court-admissible investigation evidence is exclusively Kriyam's.</div>
+          <div class="strength-item win"><strong>Speed and Price</strong>8 weeks vs 12–18 months. ₹20–40L vs ₹75L–3Cr licence + ₹50L–2Cr SI services. Total cost of ownership: SAS Year 1 = ₹1.5–5Cr. Kriyam Year 1 = ₹20–40L.</div>
+          <div class="strength-item win"><strong>India BFSI Regulatory Specificity</strong>SAS publishes for US/European frameworks. Zero IRDAI FMF-specific content. Kriyam is India-native, IRDAI-native. Your IRDAI auditor will ask for an FMC report — SAS generates dashboards, not IRDAI FMR-format board reports.</div>
+        </div>
+        <div class="bc-panel">
+          <div class="bc-panel-title lose">Where They Win</div>
+          <div class="strength-item lose"><strong>AML / Transaction monitoring</strong>SAS AML is deployed at SBI and HDFC Bank. Market-leading, battle-tested. Do NOT compete on AML.</div>
+          <div class="strength-item lose"><strong>Actuarial / Credit risk</strong>IFRS 17, pricing, reserving, credit scoring. Entirely outside Kriyam's scope. Different buyer entirely.</div>
+          <div class="strength-item lose"><strong>Enterprise reference list</strong>SBI, LIC, HDFC Bank. If a large insurer's CIO says they need a SAS-certified vendor — that procurement gate is hard to challenge.</div>
+          <div class="strength-item lose"><strong>SI ecosystem</strong>Wipro, Infosys, TCS all implement SAS. If the prospect is already in an SI engagement, SAS may be pre-selected.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Talk Tracks — 4 Key Scenarios</div>
+      <div class="track-item">
+        <div class="track-scenario">"We already use SAS for analytics"</div>
+        <div class="track-body">"SAS is excellent for risk modelling and AML — many of our clients use it too. <span class="track-key">Kriyam is not replacing SAS. SAS models the fraud risk. Kriyam manages the investigation, the field visit, and the board-level FMC report that IRDAI mandates.</span> SAS does not have a field investigation product or IRDAI FMC governance workflow. We sit on top of SAS, not instead of it."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">SAS on Evaluation Shortlist</div>
+        <div class="track-body">"SAS Fraud Decisioning is a global analytics platform that takes 12–18 months and starts at ₹75L+ licence alone. <span class="track-key">For IRDAI FMF compliance — which requires FMC governance, field investigation standards, and IIB reporting — SAS is not purpose-built.</span> Kriyam delivers this in 8 weeks at ₹20–40L, and your IRDAI April 2026 deadline has already passed."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">"SAS is the safer enterprise choice"</div>
+        <div class="track-body">"SAS is safe for analytics. <span class="track-key">For IRDAI FMF compliance, the safer choice is the platform already live in production with IRDAI-mapped workflows.</span> Kriyam is the only platform with a dedicated Clause 8 field investigation app, auto-generated FMR quarterly board reports, and IIB submission pipeline. Your IRDAI auditor will not accept a SAS dashboard as your FMC governance system."</div>
+      </div>
+      <div class="track-item">
+        <div class="track-scenario">Complementary Positioning</div>
+        <div class="track-body">"If you're running SAS for actuarial and AML — that's your analytics layer. <span class="track-key">Kriyam is your IRDAI FMF compliance and fraud investigation layer.</span> They are not substitutes. Many large insurers will use both: SAS for the data science function, Kriyam for the FCU and compliance function."</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Objections</div>
+      <div class="obj-item">
+        <div class="obj-q">SAS has a social network analysis feature for fraud rings — isn't that Sentinel?</div>
+        <div class="obj-a">SAS's social network analysis runs on your internal claims data batch. Kriyam's Sentinel (when shipped) runs across the cross-insurer fraud graph — detecting the same fraud ring operating across 5 different insurance companies simultaneously. Different data scope, different detection capability, different stage of the investigation lifecycle.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">Our Infosys/Wipro SI relationship includes SAS — it's easier to add.</div>
+        <div class="obj-a">SAS implementation via Infosys or Wipro adds 12–18 months and ₹50L–2Cr in SI fees on top of licence. Kriyam deploys directly in 8–12 weeks. For IRDAI FMF compliance that was mandated from April 1 2026, waiting for an SI engagement is not a viable compliance strategy.</div>
+      </div>
+      <div class="obj-item">
+        <div class="obj-q">SAS is trusted by LIC and SBI — Kriyam has only 4 clients.</div>
+        <div class="obj-a">SAS is trusted by LIC and SBI for actuarial modelling and AML — which Kriyam does not do. For insurance fraud investigation and IRDAI FMF compliance, SAS has zero live India implementations of its FMC governance or field investigation modules, because those modules don't exist. Kriyam has 4 paying clients actively using those exact capabilities today.</div>
+      </div>
+    </div>
+    <div class="bc-panel">
+      <div class="bc-panel-title amber">Landmine Questions</div>
+      <div class="landmine-item">Can SAS map each of its features to each specific clause of the IRDAI Insurance Fraud Monitoring Framework 2025 guidelines?</div>
+      <div class="landmine-item">When your IRDAI inspector asks for your Fraud Monitoring Committee quarterly FMR report, which specific SAS module generates that in the IRDAI-mandated format?</div>
+      <div class="landmine-item">What is SAS's field investigation product — and how does it produce court-admissible evidence as required by IRDAI Clause 8?</div>
+      <div class="landmine-item">How long will the SAS implementation via Wipro/Infosys take, and what is the total cost of ownership including SI services in Year 1?</div>
+      <div class="landmine-item">Has SAS deployed an IRDAI FMC governance workflow — with FMC committee tracking, quarterly FMR board reports, and IIB submission — at any India insurance company?</div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
